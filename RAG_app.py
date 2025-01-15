@@ -5,7 +5,6 @@ import os
 os.environ["PATH"] = os.path.join(os.path.dirname(__file__), "bin") + ":" + os.environ["PATH"]
 
 import warnings
-
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 import pysqlite3
@@ -15,9 +14,8 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import glob
 from pathlib import Path
 import sqlite3
-print("SQLite version:", sqlite3.sqlite_version)
 
-# Import openai and google_genai as main LLM services
+# Import di openai e google_genai come principali servizi LLM
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -31,6 +29,7 @@ from langchain.schema import format_document
 from dotenv import load_dotenv
 load_dotenv()
 
+#chiavi 
 token1=os.getenv("OPENAI_KEY")
 token2=os.getenv("GOOGLE_KEY")
 token3=os.getenv("COHERE_KEY")
@@ -55,7 +54,7 @@ from langchain.text_splitter import (
 # OutputParser
 from langchain_core.output_parsers import StrOutputParser
 
-# Import chroma as the vector store
+# Import di Chroma come vectorstore
 from langchain_community.vectorstores import Chroma
 
 # Contextual_compression
@@ -71,20 +70,16 @@ from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CohereRerank
 from langchain_community.llms import Cohere
 
-# # HuggingFace
-# from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
-# from langchain_community.llms import HuggingFaceHub
-
 # Import streamlit
 import streamlit as st
 
-####################################################################
-#              Config: LLM services, assistant language,...
-####################################################################
+########################################################################
+#              Configurazioni: servizi LLM, lingua dell'assistente, ...
+########################################################################
+
 list_LLM_providers = [
     ":rainbow[**OpenAI**]",
     "**Google Generative AI**",
-  #  ":hugging_face: **HuggingFace**",
 ]
 
 dict_welcome_message = {
@@ -114,17 +109,16 @@ TMP_DIR.mkdir(parents=True, exist_ok=True)
 LOCAL_VECTOR_STORE_DIR.mkdir(parents=True, exist_ok=True)
 
 ####################################################################
-#            Create app interface with streamlit
+#            Creazione dell'app con interfaccia streamlit
 ####################################################################
-st.set_page_config(page_title="Chat With Your Data")
 
+st.set_page_config(page_title="Conversa con il bot")
 st.title("🤖 Chatbot")
 
-# API keys
+# Chiavi API 
 st.session_state.openai_api_key = ""
 st.session_state.google_api_key = ""
 st.session_state.cohere_api_key = ""
-#st.session_state.hf_api_key = ""
 
 
 def expander_model_parameters(
@@ -132,7 +126,8 @@ def expander_model_parameters(
     text_input_API_key="OpenAI API Key - [Get an API key](https://platform.openai.com/account/api-keys)",
     list_models=["gpt-3.5-turbo-0125", "gpt-3.5-turbo", "gpt-4-turbo-preview"],
 ):
-    """Add a text_input (for API key) and a streamlit expander containing models and parameters."""
+    """Aggiunta di un input testuale per inserire la chiave API e di un 
+    expander che contenga i possibili modelli e parametri."""
     st.session_state.LLM_provider = LLM_provider
 
     if LLM_provider == "OpenAI":
@@ -155,21 +150,12 @@ def expander_model_parameters(
         st.session_state.openai_api_key = ""
         st.session_state.hf_api_key = ""
 
-    # if LLM_provider == "HuggingFace":
-    #     st.session_state.hf_api_key = st.text_input(
-    #         text_input_API_key,
-    #         type="password",
-    #         placeholder="insert your API key",
-    #     )
-    #     st.session_state.openai_api_key = ""
-    #     st.session_state.google_api_key = ""
-
     with st.expander("**Modelli e parametri**"):
         st.session_state.selected_model = st.selectbox(
             f"Scegli modello {LLM_provider}", list_models
         )
 
-        # model parameters
+        # parametri del modello
         st.session_state.temperature = st.slider(
             "Temperatura",
             min_value=0.0,
@@ -186,8 +172,7 @@ def expander_model_parameters(
         )
 
 def sidebar_and_documentChooser():
-    """Create the sidebar and a tabbed pane: the first tab contains a document chooser (create a new vectorstore);
-    the second contains a vectorstore chooser (open an existing vectorstore)."""
+    """Creazione della sidebar e di una finestra a schede:la prima tab contiene il document chooser, mentre la seconda l'inserimento da URL."""
 
     with st.sidebar:
         st.caption(
@@ -223,7 +208,7 @@ def sidebar_and_documentChooser():
                 list_models=["gemini-pro"],
             )
 
-        # Assistant language
+        # Lingua dell'assistente
         st.write("")
         st.session_state.assistant_language = st.selectbox(
             f"Lingua dell'assistente", list(dict_welcome_message.keys())
@@ -246,24 +231,24 @@ def sidebar_and_documentChooser():
                 value=token3,
                 placeholder="Inserisci chiave Cohere API",
             )
-    # Tabbed Pane: Create a new Vectorstore | Open a saved Vectorstore
+    # Finestra a schede: Crea un nuovo Vectorstore con dei documenti| Fornisci un URL al bot
     tab_Vector_Store_With_Docs, tab_URL_bot = st.tabs(
         ["Crea un nuovo Vectorstore con dei documenti", "Fornisci un URL al bot"]
     )
 
     with tab_Vector_Store_With_Docs:
-        # 1. Select documents
+        # 1. Selezione documenti
         st.session_state.uploaded_file_list = st.file_uploader(
             label="**Seleziona documenti**",
             accept_multiple_files=True,
             type=(["pdf", "txt", "docx", "csv"]),
         )
-        # 2. Process documents
+        # 2. Processing dei documenti
         st.session_state.vector_store_name = st.text_input(
             label="**I documenti saranno caricati e salvati in un vectorstore (Chroma dB). Inserisci un nome valido**",
             placeholder="Nome Vectorstore",
         )
-        # 3. Add a button to process documents and create a Chroma vectorstore
+        # 3. Pulsante per processare i documenti e creare il vectorstore
         st.button("Crea Vectorstore", on_click=chain_RAG_blocks)
         try:
             if st.session_state.error_message != "":
@@ -280,9 +265,10 @@ def sidebar_and_documentChooser():
         st.button("Fornisci al bot il link", on_click=submit_url)
         
 
-####################################################################
-#        Process documents and create vectorstor (Chroma dB)
-####################################################################
+##########################################################################
+#        Processing dei documenti e creazione del vectorstore (Chroma dB)
+##########################################################################
+
 def delte_temp_files():
     """delete files from the './data/tmp' folder"""
     files = glob.glob(TMP_DIR.as_posix() + "/*")
@@ -292,10 +278,9 @@ def delte_temp_files():
         except:
             pass
 
-
 def langchain_document_loader():
     """
-    Crete documnet loaders for PDF, TXT and CSV files.
+    Creazione del caricatore di documenti per file PDF, TXT e CSV.
     https://python.langchain.com/docs/modules/data_connection/document_loaders/file_directory
     """
 
@@ -324,12 +309,11 @@ def langchain_document_loader():
         show_progress=True,
     )
     documents.extend(doc_loader.load())
-    
     return documents
 
 
 def split_documents_to_chunks(documents):
-    """Split documents to chunks using RecursiveCharacterTextSplitter."""
+    """Divide i documenti in chunk utilizzando RecursiveCharacterTextSplitter."""
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1600, chunk_overlap=200)
     chunks = text_splitter.split_documents(documents)
@@ -337,7 +321,7 @@ def split_documents_to_chunks(documents):
 
 
 def select_embeddings_model():
-    """Select embeddings models: OpenAIEmbeddings or GoogleGenerativeAIEmbeddings."""
+    """Seleziona i modelli di embedding: OpenAIEmbeddings o GoogleGenerativeAIEmbeddings."""
     if st.session_state.LLM_provider == "OpenAI":
         embeddings = OpenAIEmbeddings(api_key=st.session_state.openai_api_key)
 
@@ -345,12 +329,6 @@ def select_embeddings_model():
         embeddings = GoogleGenerativeAIEmbeddings(
             model="models/embedding-001", google_api_key=st.session_state.google_api_key
         )
-
-    # if st.session_state.LLM_provider == "HuggingFace":
-    #     embeddings = HuggingFaceInferenceAPIEmbeddings(
-    #         api_key=st.session_state.hf_api_key, model_name="thenlper/gte-large"
-    #     )
-
     return embeddings
 
 
@@ -366,13 +344,13 @@ def create_retriever(
     cohere_top_n=10,
 ):
     """
-    create a retriever which can be a:
-        - Vectorstore backed retriever: this is the base retriever.
-        - Contextual compression retriever: We wrap the the base retriever in a ContextualCompressionRetriever.
-            The compressor here is a Document Compressor Pipeline, which splits documents
-            to smaller chunks, removes redundant documents, filters the top relevant documents,
-            and reorder the documents so that the most relevant are at beginning / end of the list.
-        - Cohere_reranker: CohereRerank endpoint is used to reorder the results based on relevance.
+    Creazione di un retriever che può essere:
+        - Vectorstore backed retriever: questo è il retriever di base.
+        - Contextual compression retriever: si fa il wrapping del retriever di base in un ContextualCompressionRetriever.
+            Questo compressore è un Compressor Pipeline, che divide i documenti in chunk più piccoli, rimuove
+            documenti ridondanti, filtra i documenti puù rilevanti, e riordina i documenti in maniera tale che i più rilevanti siano all'inzio/alla fine
+            della lista.
+        - Cohere_reranker: CohereRerank endpoint è utilizzato per riordinare i documenti in base alla rilevanza.
 
     Parameters:
         vector_store: Chroma vector database.
