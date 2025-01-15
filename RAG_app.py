@@ -124,7 +124,7 @@ st.title("🤖 Chatbot")
 st.session_state.openai_api_key = ""
 st.session_state.google_api_key = ""
 st.session_state.cohere_api_key = ""
-st.session_state.hf_api_key = ""
+#st.session_state.hf_api_key = ""
 
 
 def expander_model_parameters(
