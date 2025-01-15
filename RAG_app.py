@@ -138,7 +138,6 @@ def expander_model_parameters(
             placeholder="insert your API key",
         )
         st.session_state.google_api_key = ""
-        st.session_state.hf_api_key = ""
 
     if LLM_provider == "Google":
         st.session_state.google_api_key = st.text_input(
@@ -148,7 +147,6 @@ def expander_model_parameters(
             placeholder="insert your API key",
         )
         st.session_state.openai_api_key = ""
-        st.session_state.hf_api_key = ""
 
     with st.expander("**Modelli e parametri**"):
         st.session_state.selected_model = st.selectbox(
@@ -496,7 +494,6 @@ def submit_url():
         if (
             not st.session_state.openai_api_key
             and not st.session_state.google_api_key
-            and not st.session_state.hf_api_key
         ):
             error_messages.append(
                 f"Inserisci la tua chiave {st.session_state.LLM_provider} API"
@@ -585,7 +582,6 @@ def chain_RAG_blocks():
         if (
             not st.session_state.openai_api_key
             and not st.session_state.google_api_key
-            and not st.session_state.hf_api_key
         ):
             error_messages.append(
                 f"Inserisci la tua chiave {st.session_state.LLM_provider} API"
@@ -851,22 +847,19 @@ def clear_chat_history():
 def get_response_from_LLM(prompt):
     """Invocazione del LLM, ottienimento di una risposta, e display dei risultati (risposta e source documents)."""
     try:
-        # 1. Invoke LLM
+        # 1. Invocazione LLM
         response = st.session_state.chain.invoke({"question": prompt})
         answer = response["answer"]
 
-        # if st.session_state.LLM_provider == "HuggingFace":
-        #     answer = answer[answer.find("\nAnswer: ") + len("\nAnswer: ") :]
-
-        # 2. Display results
+        # 2. Display dei risultati
         st.session_state.messages.append({"role": "user", "content": prompt})
         st.session_state.messages.append({"role": "assistant", "content": answer})
         st.chat_message("user").write(prompt)
         with st.chat_message("assistant"):
-            # 2.1. Display anwser:
+            # 2.1. Display della risposta
             st.markdown(answer)
 
-            # 2.2. Display source documents:
+            # 2.2. Display dei source document:
             with st.expander("**Documenti di riferimento**"):
                 documents_content = ""
                 for document in response["source_documents"]:
@@ -913,7 +906,6 @@ def chatbot():
         if (
             not st.session_state.openai_api_key
             and not st.session_state.google_api_key
-            and not st.session_state.hf_api_key
         ):
             st.info(
                 f"Inserisci la tua chiave {st.session_state.LLM_provider} API per continuare."
