@@ -530,10 +530,7 @@ def submit_url():
             and not st.session_state.cohere_api_key
         ):
             error_messages.append(f"Inserisci la tua chiave Cohere API")
-        if not st.session_state.uploaded_file_list:
-            error_messages.append("Seleziona file da caricare")
-        if st.session_state.vector_store_name == "":
-            error_messages.append("Fornisci un nome per il Vectorstore")
+    
 
         if len(error_messages) == 1:
             st.session_state.error_message = "Per favore " + error_messages[0] + "."
