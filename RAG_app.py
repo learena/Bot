@@ -352,20 +352,20 @@ def create_retriever(
             della lista.
         - Cohere_reranker: CohereRerank endpoint è utilizzato per riordinare i documenti in base alla rilevanza.
 
-    Parameters:
+    Parametri:
         vector_store: Chroma vector database.
-        embeddings: OpenAIEmbeddings or GoogleGenerativeAIEmbeddings.
+        embeddings: OpenAIEmbeddings o GoogleGenerativeAIEmbeddings.
 
         retriever_type (str): in [Vectorstore backed retriever,Contextual compression,Cohere reranker]. default = Cohere reranker
 
         base_retreiver_search_type: search_type in ["similarity", "mmr", "similarity_score_threshold"], default = similarity.
-        base_retreiver_k: The most similar vectors are returned (default k = 16).
+        base_retreiver_k: ritorna i vettori più simili (default k = 16).
 
-        compression_retriever_k: top k documents returned by the compression retriever, default = 20
+        compression_retriever_k: i top k documenti ritornati dal compression retriever, default = 20
 
         cohere_api_key: Cohere API key
-        cohere_model (str): model used by Cohere, in ["rerank-multilingual-v2.0","rerank-english-v2.0"]
-        cohere_top_n: top n documents returned bu Cohere, default = 10
+        cohere_model (str): modello usato da Cohere, in ["rerank-multilingual-v2.0","rerank-english-v2.0"]
+        cohere_top_n: top n documenti ritornati da Cohere, default = 10
 
     """
 
@@ -402,12 +402,12 @@ def create_retriever(
 def Vectorstore_backed_retriever(
     vectorstore, search_type="similarity", k=4, score_threshold=None
 ):
-    """create a vectorsore-backed retriever
-    Parameters:
-        search_type: Defines the type of search that the Retriever should perform.
-            Can be "similarity" (default), "mmr", or "similarity_score_threshold"
-        k: number of documents to return (Default: 4)
-        score_threshold: Minimum relevance threshold for similarity_score_threshold (default=None)
+    """Creazione di un vectorsore-backed retriever
+    Parametri:
+        search_type: Difinisce il tipo di ricerca che il retriever deve fare.
+            Può essere "similarity" (default), "mmr", o "similarity_score_threshold"
+        k: numero di documenti da ritornare (Default: 4)
+        score_threshold: Minima soglia di rilevanza per il similarity_score_threshold (default=None)
     """
     search_kwargs = {}
     if k is not None:
@@ -424,61 +424,60 @@ def Vectorstore_backed_retriever(
 def create_compression_retriever(
     embeddings, base_retriever, chunk_size=500, k=16, similarity_threshold=None
 ):
-    """Build a ContextualCompressionRetriever.
-    We wrap the the base_retriever (a Vectorstore-backed retriever) in a ContextualCompressionRetriever.
-    The compressor here is a Document Compressor Pipeline, which splits documents
-    to smaller chunks, removes redundant documents, filters the top relevant documents,
-    and reorder the documents so that the most relevant are at beginning / end of the list.
+    """Costruzione di un ContextualCompressionRetriever.
+    Possiamo fare il wrapping del base_retriever (un retriever Vectorstore-backed) in un ContextualCompressionRetriever.
+    Questo compressore è un Compressor Pipeline, che divide i documenti in chunk più piccoli, rimuove
+    documenti ridondanti, filtra i documenti puù rilevanti, e riordina i documenti in maniera tale che i più rilevanti siano all'inzio/alla fine
+    della lista.
 
-    Parameters:
-        embeddings: OpenAIEmbeddings or GoogleGenerativeAIEmbeddings.
-        base_retriever: a Vectorstore-backed retriever.
-        chunk_size (int): Docs will be splitted into smaller chunks using a CharacterTextSplitter with a default chunk_size of 500.
-        k (int): top k relevant documents to the query are filtered using the EmbeddingsFilter. default =16.
-        similarity_threshold : similarity_threshold of the  EmbeddingsFilter. default =None
+    Parametri:
+        embeddings: OpenAIEmbeddings o GoogleGenerativeAIEmbeddings.
+        base_retriever: un retriver Vectorstore-backed.
+        chunk_size (int): i documenti saranno divisi in chunk usando un CharacterTextSplitter con una chunk_size di default 500.
+        k (int): i top k documenti rilevanti alla domanda sono filtrati utilizzando EmbeddingsFilter. default =16.
+        similarity_threshold : similarity_threshold dell' EmbeddingsFilter. default =None
     """
 
-    # 1. splitting docs into smaller chunks
+    # 1. splitting dei documenti in chunck più piccoli
     splitter = CharacterTextSplitter(
         chunk_size=chunk_size, chunk_overlap=0, separator=". "
     )
 
-    # 2. removing redundant documents
+    # 2. rimozione dei documenti ridondanti
     redundant_filter = EmbeddingsRedundantFilter(embeddings=embeddings)
 
-    # 3. filtering based on relevance to the query
+    # 3. filtro basato sulla rilevanza rispetto alla domanda
     relevant_filter = EmbeddingsFilter(
         embeddings=embeddings, k=k, similarity_threshold=similarity_threshold
     )
 
-    # 4. Reorder the documents
+    # 4. Riordino dei documenti
 
-    # Less relevant document will be at the middle of the list and more relevant elements at beginning / end.
+    # I documenti meno rilevanti saranno nel mezzo della lista ed i più rilevanti all'inizio/fine.
     # Reference: https://python.langchain.com/docs/modules/data_connection/retrievers/long_context_reorder
     reordering = LongContextReorder()
 
-    # 5. create compressor pipeline and retriever
+    # 5. Creazione di una compressor pipeline e del retriever
     pipeline_compressor = DocumentCompressorPipeline(
         transformers=[splitter, redundant_filter, relevant_filter, reordering]
     )
     compression_retriever = ContextualCompressionRetriever(
         base_compressor=pipeline_compressor, base_retriever=base_retriever
     )
-
     return compression_retriever
 
 
 def CohereRerank_retriever(
     base_retriever, cohere_api_key, cohere_model="rerank-multilingual-v2.0", top_n=10
 ):
-    """Build a ContextualCompressionRetriever using CohereRerank endpoint to reorder the results
-    based on relevance to the query.
+    """Costruzione di un ContextualCompressionRetriever utilizzando il CohereRerank endpoint per riordinare i documenti
+    basati sulla rilevanza rispetto alla domanda.
 
     Parameters:
-       base_retriever: a Vectorstore-backed retriever
-       cohere_api_key: the Cohere API key
-       cohere_model: the Cohere model, in ["rerank-multilingual-v2.0","rerank-english-v2.0"], default = "rerank-multilingual-v2.0"
-       top_n: top n results returned by Cohere rerank. default = 10.
+       base_retriever: un retriever Vectorstore-backed
+       cohere_api_key: la chiave API Cohere 
+       cohere_model: il modello Cohere, in ["rerank-multilingual-v2.0","rerank-english-v2.0"], default = "rerank-multilingual-v2.0"
+       top_n: i top n risultati ritornati da Cohere rerank. default = 10.
     """
 
     compressor = CohereRerank(
@@ -491,8 +490,8 @@ def CohereRerank_retriever(
     return retriever_Cohere
 
 def submit_url():
-    with st.spinner("Submitting URL..."):
-         # Check inputs
+    with st.spinner("Caricando l'URL..."):
+         # Controllo degli input
         error_messages = []
         if (
             not st.session_state.openai_api_key
@@ -509,7 +508,6 @@ def submit_url():
         ):
             error_messages.append(f"Inserisci la tua chiave Cohere API")
     
-
         if len(error_messages) == 1:
             st.session_state.error_message = "Per favore " + error_messages[0] + "."
         elif len(error_messages) > 1:
@@ -523,7 +521,7 @@ def submit_url():
         else:
             st.session_state.error_message = ""
         try:
-        # 1. Delete old temp files
+        #  Cancellazione dei vecchi file tmp
             delte_temp_files()
             if st.session_state.rag_url is not None:
                 url = st.session_state.rag_url
@@ -533,7 +531,7 @@ def submit_url():
                 if documents:
                     chunks = split_documents_to_chunks(documents)
                     embeddings = select_embeddings_model()
-                                # 6. Create a vectorstore
+                    #  Creazione di un vectorstore
                     persist_directory = (
                         LOCAL_VECTOR_STORE_DIR.as_posix()
                         + "/"
@@ -547,7 +545,7 @@ def submit_url():
                         )
                         st.toast(f"Pagina web con URL *{url}* caricata con successo.", icon="✅")
 
-                        # 7. Create retriever
+                        #  Creazione retriever
                         st.session_state.retriever = create_retriever(
                             vector_store=st.session_state.vector_store,
                             embeddings=embeddings,
@@ -559,7 +557,7 @@ def submit_url():
                             cohere_model="rerank-multilingual-v2.0",
                             cohere_top_n=10,
                         )
-                    # 8. Create memory and ConversationalRetrievalChain
+                        #  Creazione memoria e ConversationalRetrievalChain
                         (
                             st.session_state.chain,
                             st.session_state.memory,
@@ -568,7 +566,7 @@ def submit_url():
                                 chain_type="stuff",
                                 language=st.session_state.assistant_language,
                             )
-                    # 9. Cclear chat_history
+                        #  Eliminazione della cronologia della chat
                         clear_chat_history()
                     except Exception as e:
                         st.error(e)
@@ -576,12 +574,12 @@ def submit_url():
             st.error(e)
 
 def chain_RAG_blocks():
-    """The RAG system is composed of:
-    - 1. Retrieval: includes document loaders, text splitter, vectorstore and retriever.
-    - 2. Memory.
-    - 3. Converstaional Retreival chain.
+    """Il sistema RAG system è composto da:
+    - 1. Retrieval: include i document loader, il text splitter, il vectorstore ed il retriever.
+    - 2. Memoria.
+    - 3. Catena di Converstaional Retrieval.
     """
-    with st.spinner("Creating vectorstore..."):
+    with st.spinner("Creazione vectorstore..."):
         # Check inputs
         error_messages = []
         if (
@@ -616,10 +614,10 @@ def chain_RAG_blocks():
         else:
             st.session_state.error_message = ""
             try:
-                # 1. Delete old temp files
+                # 1. Cancellazione dei vecchi file tmp
                 delte_temp_files()
 
-                # 2. Upload selected documents to temp directory
+                # 2. Upload dei documenti selezionati sulla directory temp
                 if st.session_state.uploaded_file_list is not None:
                     for uploaded_file in st.session_state.uploaded_file_list:
                         error_message = ""
@@ -634,13 +632,13 @@ def chain_RAG_blocks():
                     if error_message != "":
                         st.warning(f"Errori: {error_message}")
 
-                    # 3. Load documents with Langchain loaders
+                    # 3. Caricamento dei documenti con loader Langchain
                     documents = langchain_document_loader()
                     print(f"Caricato/i {len(documents)} documento/i")
                     for doc in documents:
-                        print(doc.metadata, doc.page_content[:100])  # Print metadata and first 100 chars
+                        print(doc.metadata, doc.page_content[:100])  # Stampa dei metadati e dei primi 100 chars
 
-                    # 4. Split documents to chunks
+                    # 4. Divisione dei documenti in chunk
                     chunks = split_documents_to_chunks(documents)
                     print(f"Creati {len(chunks)} chunks")
                     # 5. Embeddings
@@ -649,7 +647,7 @@ def chain_RAG_blocks():
                     test_vector = embeddings.embed_query("Test embedding")
                     print(f"Generato test embedding: {test_vector[:10]}")  # First 10 dimensions
 
-                    # 6. Create a vectorstore
+                    # 6. Creazione di un vectorstore
                     persist_directory = (
                         LOCAL_VECTOR_STORE_DIR.as_posix()
                         + "/"
@@ -666,7 +664,7 @@ def chain_RAG_blocks():
                             f"Vectorstore **{st.session_state.vector_store_name}** creato con successo"
                         )
 
-                        # 7. Create retriever
+                        # 7. Creazione retriever
                         st.session_state.retriever = create_retriever(
                             vector_store=st.session_state.vector_store,
                             embeddings=embeddings,
@@ -679,7 +677,7 @@ def chain_RAG_blocks():
                             cohere_top_n=10,
                         )
 
-                        # 8. Create memory and ConversationalRetrievalChain
+                        # 8. Creazione memoria e ConversationalRetrievalChain
                         (
                             st.session_state.chain,
                             st.session_state.memory,
@@ -689,7 +687,7 @@ def chain_RAG_blocks():
                             language=st.session_state.assistant_language,
                         )
 
-                        # 9. Cclear chat_history
+                        # 9. Eliminazione della cronologia della chat
                         clear_chat_history()
 
                     except Exception as e:
@@ -700,13 +698,13 @@ def chain_RAG_blocks():
 
 
 ####################################################################
-#                       Create memory
+#                       Creazione della memoria
 ####################################################################
 
 
 def create_memory(model_name="gpt-3.5-turbo", memory_max_token=None):
-    """Creates a ConversationSummaryBufferMemory for gpt-3.5-turbo
-    Creates a ConversationBufferMemory for the other models"""
+    """Creazione di un ConversationSummaryBufferMemory per gpt-3.5-turbo
+    Creazione di un ConversationBufferMemory per gli altri """
 
     if model_name == "gpt-3.5-turbo":
         if memory_max_token is None:
@@ -734,13 +732,11 @@ def create_memory(model_name="gpt-3.5-turbo", memory_max_token=None):
 
 
 ####################################################################
-#          Create ConversationalRetrievalChain with memory
+#          Creazione di ConversationalRetrievalChain con memoria
 ####################################################################
 
-
 def answer_template(language="italian"):
-    """Pass the standalone question along with the chat history and context
-    to the `LLM` wihch will answer."""
+    """Invio della domanda con la cronologia della chat e del contesto alla LLM che deve rispondere."""
 
     template = f"""Answer the question at the end, using only the following context (delimited by <context></context>).
 Your answer must be in the language at the end. 
@@ -763,16 +759,15 @@ def create_ConversationalRetrievalChain(
     chain_type="stuff",
     language="italian",
 ):
-    """Create a ConversationalRetrievalChain.
-    First, it passes the follow-up question along with the chat history to an LLM which rephrases
-    the question and generates a standalone query.
-    This query is then sent to the retriever, which fetches relevant documents (context)
-    and passes them along with the standalone question and chat history to an LLM to answer.
+    """Creazione di un ConversationalRetrievalChain.
+    Per prima cosa, passa la domanda di follow-up insieme alla cronologia della chat ad una LLM che parafrasa la domanda e genera una query singola.
+    Questa query è poi inviata al retriever, che prende i documenti rilevanti documents (context) e li passa insieme alla domanda singola ed alla 
+    cronologia della chat ad un LLM che risponde
     """
 
-    # 1. Define the standalone_question prompt.
-    # Pass the follow-up question along with the chat history to the `condense_question_llm`
-    # which rephrases the question and generates a standalone question.
+    # 1. Definizione del prompt standalone_question.
+    # Invio della domanda di follow-upstion insieme alla cronologia della chat ad una `condense_question_llm`
+    # che parafrasa la domanda e genera una query singola.
 
     condense_question_prompt = PromptTemplate(
         input_variables=["chat_history", "question"],
@@ -783,16 +778,16 @@ Follow Up Input: {question}\n
 Standalone question:""",
     )
 
-    # 2. Define the answer_prompt
-    # Pass the standalone question + the chat history + the context (retrieved documents)
-    # to the `LLM` wihch will answer
+    # 2. Definizione dell' answer_prompt
+    # Invio della domanda singola + la cronologia della chat + il contesto (documenti ripresi)
+    # al `LLM` che risponderà
 
     answer_prompt = ChatPromptTemplate.from_template(answer_template(language=language))
 
-    # 3. Add ConversationSummaryBufferMemory for gpt-3.5, and ConversationBufferMemory for the other models
+    # 3. Aggiunta di ConversationSummaryBufferMemory per gpt-3.5, e ConversationBufferMemory per gli altri modelli
     memory = create_memory(st.session_state.selected_model)
 
-    # 4. Instantiate LLMs: standalone_query_generation_llm & response_generation_llm
+    # 4. Instanziamento LLM: standalone_query_generation_llm & response_generation_llm
     if st.session_state.LLM_provider == "OpenAI":
         standalone_query_generation_llm = ChatOpenAI(
             api_key=st.session_state.openai_api_key,
@@ -820,29 +815,7 @@ Standalone question:""",
             convert_system_message_to_human=True,
         )
 
-    # if st.session_state.LLM_provider == "HuggingFace":
-    #     standalone_query_generation_llm = HuggingFaceHub(
-    #         repo_id=st.session_state.selected_model,
-    #         huggingfacehub_api_token=st.session_state.hf_api_key,
-    #         model_kwargs={
-    #             "temperature": 0.1,
-    #             "top_p": 0.95,
-    #             "do_sample": True,
-    #             "max_new_tokens": 1024,
-    #         },
-    #     )
-    #     response_generation_llm = HuggingFaceHub(
-    #         repo_id=st.session_state.selected_model,
-    #         huggingfacehub_api_token=st.session_state.hf_api_key,
-    #         model_kwargs={
-    #             "temperature": st.session_state.temperature,
-    #             "top_p": st.session_state.top_p,
-    #             "do_sample": True,
-    #             "max_new_tokens": 1024,
-    #         },
-    #     )
-
-    # 5. Create the ConversationalRetrievalChain
+    # 5. Creazione del ConversationalRetrievalChain
 
     chain = ConversationalRetrievalChain.from_llm(
         condense_question_prompt=condense_question_prompt,
@@ -860,15 +833,15 @@ Standalone question:""",
 
 
 def clear_chat_history():
-    """clear chat history and memory."""
-    # 1. re-initialize messages
+    """Svuota la cronologia della chat e la memoria"""
+    # 1. Re-inizializzazione dei messaggi
     st.session_state.messages = [
         {
             "role": "assistant",
             "content": dict_welcome_message[st.session_state.assistant_language],
         }
     ]
-    # 2. Clear memory (history)
+    # 2. Eliminazione della memoria (history)
     try:
         st.session_state.memory.clear()
     except:
@@ -876,7 +849,7 @@ def clear_chat_history():
 
 
 def get_response_from_LLM(prompt):
-    """invoke the LLM, get response, and display results (answer and source documents)."""
+    """Invocazione del LLM, ottienimento di una risposta, e display dei risultati (risposta e source documents)."""
     try:
         # 1. Invoke LLM
         response = st.session_state.chain.invoke({"question": prompt})
