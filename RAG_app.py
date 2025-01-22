@@ -523,22 +523,9 @@ def submit_url():
         try:
             # 1. Cancellazione dei vecchi file tmp
             delte_temp_files()
-
             if st.session_state.rag_url is not None:
-                fp = urllib.request.urlopen(st.session_state.rag_url)
-                mybytes = fp.read()
-                mystr = mybytes.decode("utf8")
-                fp.close()
-
-                temp_file_path = os.path.join(
-                    TMP_DIR.as_posix(), "ciao"
-                    )
-                with open(temp_file_path, "wb") as temp_file:
-                    temp_file.write(mybytes)
-
+                url = st.session_state.rag_url
                 documents = []
-                url=st.session_state.rag_url
-                web_loader = WebBaseLoader(url)
                 documents.extend(web_loader.load())
                 if documents:
                     chunks = split_documents_to_chunks(documents)
