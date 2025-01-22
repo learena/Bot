@@ -43,7 +43,7 @@ from langchain_community.document_loaders import (
     CSVLoader,
     Docx2txtLoader,
     WebBaseLoader,
-    UnstructuredLoader,
+    UnstructuredHTMLLoader,
 )
 
 # text_splitter
@@ -525,7 +525,7 @@ def submit_url():
                 url = st.session_state.rag_url
                 documents = []
                 web_loader = DirectoryLoader(
-                    TMP_DIR.as_posix(), glob="**/*.html", loader_cls=UnstructuredLoader, show_progress=True
+                    TMP_DIR.as_posix(), glob="**/*.html", loader_cls=UnstructuredHTMLLoader, show_progress=True
                 )
                 documents.extend(web_loader.load())
                 if documents:
