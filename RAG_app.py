@@ -270,7 +270,7 @@ def sidebar_and_documentChooser():
 #        Processing dei documenti e creazione del vectorstore (Chroma dB)
 ##########################################################################
 
-def delte_temp_files():
+def delete_temp_files():
     """Delete all files from the './data/tmp' folder and './data/vector_store' folder."""
     chromadb.api.client.SharedSystemClient.clear_system_cache()
     # Directories to clean
@@ -540,7 +540,7 @@ def submit_url():
             st.session_state.error_message = ""
         try:
             # 1. Cancellazione dei vecchi file tmp
-            delte_temp_files()
+            delete_temp_files()
 
             if st.session_state.rag_url is not None:
                 url = st.session_state.rag_url
@@ -646,7 +646,7 @@ def chain_RAG_blocks():
             st.session_state.error_message = ""
             try:
                 # 1. Cancellazione dei vecchi file tmp
-                delte_temp_files()
+                delete_temp_files()
 
                 # 2. Upload dei documenti selezionati sulla directory temp
                 if st.session_state.uploaded_file_list is not None:
