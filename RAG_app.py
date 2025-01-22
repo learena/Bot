@@ -525,10 +525,10 @@ def submit_url():
                 url = st.session_state.rag_url
 
                 temp_file_path = os.path.join(
-                    TMP_DIR.as_posix(), st.session_state.rag_url.name
+                    TMP_DIR.as_posix(), "ciao"
                     )
                 with open(temp_file_path, "wb") as temp_file:
-                    temp_file.write(st.session_state.rag_url.read())
+                    temp_file.write(url)
 
                 documents = []
                 web_loader = WebBaseLoader(url)
