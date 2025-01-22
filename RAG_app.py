@@ -523,6 +523,7 @@ def submit_url():
 
             if st.session_state.rag_url is not None:
                 url = st.session_state.rag_url
+                error_message = ""
                 try:
                     temp_file_path = os.path.join(
                         TMP_DIR.as_posix(), url.name
