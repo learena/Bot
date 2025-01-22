@@ -537,6 +537,7 @@ def submit_url():
                     temp_file.write(mybytes)
 
                 documents = []
+                url=st.session_state.rag_url
                 web_loader = WebBaseLoader(url)
                 documents.extend(web_loader.load())
                 if documents:
