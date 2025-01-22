@@ -1,3 +1,4 @@
+
 ####################################################################
 #                         import
 ####################################################################
@@ -6,9 +7,6 @@ os.environ["PATH"] = os.path.join(os.path.dirname(__file__), "bin") + ":" + os.e
 
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
-
-import urllib.request
-
 
 import pysqlite3
 import sys
@@ -521,7 +519,7 @@ def submit_url():
         else:
             st.session_state.error_message = ""
         try:
-            # 1. Cancellazione dei vecchi file tmp
+        #  Cancellazione dei vecchi file tmp
             delte_temp_files()
             if st.session_state.rag_url is not None:
                 url = st.session_state.rag_url
