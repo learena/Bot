@@ -519,16 +519,30 @@ def submit_url():
         else:
             st.session_state.error_message = ""
         try:
-        #  Cancellazione dei vecchi file tmp
+            # 1. Cancellazione dei vecchi file tmp
             delte_temp_files()
+
             if st.session_state.rag_url is not None:
                 url = st.session_state.rag_url
                 documents = []
-                web_loader=WebBaseLoader(url)
-                documents.extend(web_loader.load())
+
+                # 2. Salvataggio dei documenti nella directory TMP_DIR
+                try:
+                    temp_file_path = os.path.join(TMP_DIR.as_posix(), "web_content.txt")
+                    web_loader = WebBaseLoader(url)
+                    documents.extend(web_loader.load())
+
+                    with open(temp_file_path, "w", encoding="utf-8") as temp_file:
+                        for doc in documents:
+                            temp_file.write(doc.page_content + "\n")
+                except Exception as e:
+                    st.error(f"Errore durante il salvataggio dei contenuti web: {e}")
+
                 if documents:
+                    # 3. Divisione dei documenti in chunk
                     chunks = split_documents_to_chunks(documents)
                     embeddings = select_embeddings_model()
+
                     #  Creazione di un vectorstore
                     persist_directory = (
                         LOCAL_VECTOR_STORE_DIR.as_posix()
