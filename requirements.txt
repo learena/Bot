@@ -15,8 +15,8 @@ build==1.0.3
 cachetools==5.3.2
 certifi==2024.2.2
 charset-normalizer==3.3.2
-chroma-hnswlib==0.7.2
-chromadb==0.4.9
+chroma-hnswlib==0.7.3
+chromadb==0.4.22
 click==8.1.7
 cohere==4.47
 colorama==0.4.6
@@ -32,7 +32,7 @@ python-dotenv
 exceptiongroup==1.2.0
 executing==2.0.1
 faiss-cpu
-fastapi==0.95.2
+fastapi==0.109.2
 fastavro==1.9.3
 filelock==3.13.1
 flatbuffers==23.5.26
