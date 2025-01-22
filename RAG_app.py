@@ -43,6 +43,7 @@ from langchain_community.document_loaders import (
     CSVLoader,
     Docx2txtLoader,
     WebBaseLoader,
+    UnstructuredLoader,
 )
 
 # text_splitter
