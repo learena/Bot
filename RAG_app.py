@@ -526,6 +526,7 @@ def submit_url():
             if st.session_state.rag_url is not None:
                 url = st.session_state.rag_url
                 documents = []
+                web_loader=WebBaseLoader(url)
                 documents.extend(web_loader.load())
                 if documents:
                     chunks = split_documents_to_chunks(documents)
