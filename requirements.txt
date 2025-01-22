@@ -32,7 +32,7 @@ python-dotenv
 exceptiongroup==1.2.0
 executing==2.0.1
 faiss-cpu
-fastapi==0.95.2
+fastapi==0.85.0
 fastavro==1.9.3
 filelock==3.13.1
 flatbuffers==23.5.26
