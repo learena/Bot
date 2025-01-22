@@ -271,30 +271,13 @@ def sidebar_and_documentChooser():
 ##########################################################################
 
 def delte_temp_files():
-    """Delete all files from the './data/tmp' folder and './data/vector_store' folder."""
-    # Directories to clean
-    directories_to_clean = [TMP_DIR.as_posix(), LOCAL_VECTOR_STORE_DIR.as_posix()]
-    
-    for directory in directories_to_clean:
-        print(f"Cleaning directory: {directory}")
-        files = glob.glob(directory + "/*")  # Get all files and subdirectories
-        for f in files:
-            try:
-                if os.path.isfile(f) or os.path.islink(f):  # If it's a file or symbolic link
-                    os.remove(f)
-                    print(f"Deleted file: {f}")
-                elif os.path.isdir(f):  # If it's a directory
-                    for root, dirs, file_names in os.walk(f, topdown=False):
-                        for name in file_names:
-                            os.remove(os.path.join(root, name))
-                        for name in dirs:
-                            os.rmdir(os.path.join(root, name))
-                    os.rmdir(f)  # Remove the top-level directory
-                    print(f"Deleted directory: {f}")
-            except Exception as e:
-                print(f"Failed to delete {f}. Reason: {e}")
-
-
+    """delete files from the './data/tmp' folder"""
+    files = glob.glob(TMP_DIR.as_posix() + "/*")
+    for f in files:
+        try:
+            os.remove(f)
+        except:
+            pass
 
 def langchain_document_loader():
     """
