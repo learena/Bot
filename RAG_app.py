@@ -16,7 +16,7 @@ import glob
 from pathlib import Path
 import sqlite3
 
-import shutil
+import chromadb.api
 
 # Import di openai e google_genai come principali servizi LLM
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
