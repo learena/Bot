@@ -271,13 +271,35 @@ def sidebar_and_documentChooser():
 ##########################################################################
 
 def delte_temp_files():
-    """delete files from the './data/tmp' folder"""
-    files = glob.glob(TMP_DIR.as_posix() + "/*")
-    for f in files:
-        try:
-            os.remove(f)
-        except:
-            pass
+    """Delete temporary files from TMP_DIR and contents of LOCAL_VECTOR_STORE_DIR without deleting tenant files."""
+    # Directories to clean
+    directories_to_clean = [TMP_DIR.as_posix(), LOCAL_VECTOR_STORE_DIR.as_posix()]
+    
+    for directory in directories_to_clean:
+        print(f"Cleaning directory: {directory}")
+        files_and_dirs = glob.glob(directory + "/*")  # Get all files and subdirectories
+        
+        for item in files_and_dirs:
+            try:
+                # Skip critical tenant or metadata files for Chroma
+                if directory == LOCAL_VECTOR_STORE_DIR.as_posix() and "chroma" in os.path.basename(item):
+                    print(f"Skipping tenant file/directory: {item}")
+                    continue
+                
+                if os.path.isfile(item) or os.path.islink(item):  # Delete files or symbolic links
+                    os.remove(item)
+                    print(f"Deleted file: {item}")
+                elif os.path.isdir(item):  # Delete directories
+                    for root, dirs, file_names in os.walk(item, topdown=False):
+                        for name in file_names:
+                            os.remove(os.path.join(root, name))
+                        for name in dirs:
+                            os.rmdir(os.path.join(root, name))
+                    os.rmdir(item)  # Remove the top-level directory
+                    print(f"Deleted directory: {item}")
+            except Exception as e:
+                print(f"Failed to delete {item}. Reason: {e}")
+
 
 def langchain_document_loader():
     """
