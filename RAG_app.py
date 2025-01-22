@@ -523,17 +523,12 @@ def submit_url():
 
             if st.session_state.rag_url is not None:
                 url = st.session_state.rag_url
-                error_message = ""
-                try:
-                    temp_file_path = os.path.join(
-                        TMP_DIR.as_posix(), url.name
-                        )
-                    with open(temp_file_path, "wb") as temp_file:
-                        temp_file.write(url.read())
-                except Exception as e:
-                        error_message += e
-                if error_message != "":
-                        st.warning(f"Errori: {error_message}")
+
+                temp_file_path = os.path.join(
+                    TMP_DIR.as_posix(), url.name
+                    )
+                with open(temp_file_path, "wb") as temp_file:
+                    temp_file.write(url.read())
 
                 documents = []
                 web_loader = WebBaseLoader(url)
