@@ -271,15 +271,22 @@ def sidebar_and_documentChooser():
 ##########################################################################
 
 def delte_temp_files():
-    for filename in os.listdir(TMP_DIR):
-        file_path = os.path.join(TMP_DIR, filename)
+    """Delete all files from the './data/tmp' folder."""
+    files = glob.glob(TMP_DIR.as_posix() + "/*")  # Get all files and directories in TMP_DIR
+    for f in files:
         try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
+            if os.path.isfile(f) or os.path.islink(f):  # Check if it's a file or symbolic link
+                os.remove(f)
+            elif os.path.isdir(f):  # If it's a directory, remove it recursively
+                for root, dirs, file_names in os.walk(f, topdown=False):
+                    for name in file_names:
+                        os.remove(os.path.join(root, name))
+                    for name in dirs:
+                        os.rmdir(os.path.join(root, name))
+                os.rmdir(f)  # Remove the top-level directory
         except Exception as e:
-            print(f"Failed to delete {file_path}. Reason: {e}")
+            print(f"Failed to delete {f}. Reason: {e}")
+
 
 def langchain_document_loader():
     """
