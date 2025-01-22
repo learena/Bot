@@ -623,7 +623,7 @@ def chain_RAG_blocks():
             )
 
         if (
-            st.session_state.retriever_type == list_retriever_types[0]
+            st.session_state.retriever_type == list_retriever_types[1]
             and not st.session_state.cohere_api_key
         ):
             error_messages.append(f"Inserisci la tua chiave Cohere API")
