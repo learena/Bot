@@ -525,7 +525,7 @@ def submit_url():
                 url = st.session_state.rag_url
 
                 temp_file_path = os.path.join(
-                    TMP_DIR.as_posix(), url.name
+                    TMP_DIR.as_posix(), url
                     )
                 with open(temp_file_path, "wb") as temp_file:
                     temp_file.write(url.read())
