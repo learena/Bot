@@ -534,7 +534,7 @@ def submit_url():
                     TMP_DIR.as_posix(), "ciao"
                     )
                 with open(temp_file_path, "wb") as temp_file:
-                    temp_file.write(mystr)
+                    temp_file.write(mybytes)
 
                 documents = []
                 web_loader = WebBaseLoader(url)
