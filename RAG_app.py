@@ -16,6 +16,8 @@ import glob
 from pathlib import Path
 import sqlite3
 
+import shutil
+
 # Import di openai e google_genai come principali servizi LLM
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -269,13 +271,15 @@ def sidebar_and_documentChooser():
 ##########################################################################
 
 def delte_temp_files():
-    """delete files from the './data/tmp' folder"""
-    files = glob.glob(TMP_DIR.as_posix() + "/*")
-    for f in files:
+    for filename in os.listdir(TMP_DIR):
+        file_path = os.path.join(TMP_DIR, filename)
         try:
-            os.remove(f)
-        except:
-            pass
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print(f"Failed to delete {file_path}. Reason: {e}")
 
 def langchain_document_loader():
     """
