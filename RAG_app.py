@@ -7,6 +7,9 @@ os.environ["PATH"] = os.path.join(os.path.dirname(__file__), "bin") + ":" + os.e
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
+import urllib.request
+
+
 import pysqlite3
 import sys
 #sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
@@ -522,13 +525,16 @@ def submit_url():
             delte_temp_files()
 
             if st.session_state.rag_url is not None:
-                url = st.session_state.rag_url
+                fp = urllib.request.urlopen(st.session_state.rag_url)
+                mybytes = fp.read()
+                mystr = mybytes.decode("utf8")
+                fp.close()
 
                 temp_file_path = os.path.join(
                     TMP_DIR.as_posix(), "ciao"
                     )
                 with open(temp_file_path, "wb") as temp_file:
-                    temp_file.write(url)
+                    temp_file.write(mystr)
 
                 documents = []
                 web_loader = WebBaseLoader(url)
