@@ -271,9 +271,9 @@ def sidebar_and_documentChooser():
 ##########################################################################
 
 def delete_temp_files():
-    """Delete all files from the './data/tmp' folder and './data/vector_store' folder."""
+    """Cancella tutti i file dalle cartelle './data/tmp' e './data/vector_store'"""
     chromadb.api.client.SharedSystemClient.clear_system_cache()
-    # Directories to clean
+    # Directory da pulire
     directories_to_clean = [TMP_DIR.as_posix(), LOCAL_VECTOR_STORE_DIR.as_posix()]
     
     for directory in directories_to_clean:
